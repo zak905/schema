@@ -1,24 +1,28 @@
-schema
-======
-[![GoDoc](https://godoc.org/github.com/gorilla/schema?status.svg)](https://godoc.org/github.com/gorilla/schema)
-[![CircleCI](https://circleci.com/gh/gorilla/mux.svg?style=svg)](https://circleci.com/gh/gorilla/schema)
-[![Sourcegraph](https://sourcegraph.com/github.com/gorilla/schema/-/badge.svg)](https://sourcegraph.com/github.com/gorilla/schema?badge)
+
+### More details can be found in the original [README](https://github.com/gorilla/schema/blob/master/README.md)
 
 
-Package gorilla/schema converts structs to and from form values.
+### This fork adds the posibility to add default values when decoding using the `default` tag
+
+The supported field for the `default` tag:
+
+* bool
+* float variants (float32, float64)
+* int variants (int, int8, int16, int32, int64)
+* string
+* uint variants (uint, uint8, uint16, uint32, uint64)
+* a pointer to one of the above types
+
 
 ## Example
 
-Here's a quick example: we parse POST form values and then decode them into a struct:
 
 ```go
-// Set a Decoder instance as a package global, because it caches
-// meta-data about structs, and an instance can be shared safely.
 var decoder = schema.NewDecoder()
 
 type Person struct {
-    Name  string
-    Phone string
+    Name  string `schema:"name" default:"tester"`
+    Phone string `schema:"phone" default:"+12345567895"`
 }
 
 func MyHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,57 +39,15 @@ func MyHandler(w http.ResponseWriter, r *http.Request) {
         // Handle error
     }
 
-    // Do something with person.Name or person.Phone
+    //assuming name and phone are not provided
+    //person.Name will have value: tester
+    //person.Phone will have value: +12345567895
 }
 ```
 
-Conversely, contents of a struct can be encoded into form values. Here's a variant of the previous example using the Encoder:
 
-```go
-var encoder = schema.NewEncoder()
 
-func MyHttpRequest() {
-    person := Person{"Jane Doe", "555-5555"}
-    form := url.Values{}
 
-    err := encoder.Encode(person, form)
 
-    if err != nil {
-        // Handle error
-    }
 
-    // Use form values, for example, with an http client
-    client := new(http.Client)
-    res, err := client.PostForm("http://my-api.test", form)
-}
 
-```
-
-To define custom names for fields, use a struct tag "schema". To not populate certain fields, use a dash for the name and it will be ignored:
-
-```go
-type Person struct {
-    Name  string `schema:"name,required"`  // custom name, must be supplied
-    Phone string `schema:"phone"`          // custom name
-    Admin bool   `schema:"-"`              // this field is never set
-}
-```
-
-The supported field types in the struct are:
-
-* bool
-* float variants (float32, float64)
-* int variants (int, int8, int16, int32, int64)
-* string
-* uint variants (uint, uint8, uint16, uint32, uint64)
-* struct
-* a pointer to one of the above types
-* a slice or a pointer to a slice of one of the above types
-
-Unsupported types are simply ignored, however custom types can be registered to be converted.
-
-More examples are available on the Gorilla website: https://www.gorillatoolkit.org/pkg/schema
-
-## License
-
-BSD licensed. See the LICENSE file for details.
