@@ -2027,7 +2027,15 @@ func TestUnmashalPointerToEmbedded(t *testing.T) {
 
 func TestDefaultValuesAreSet(t *testing.T) {
 
+	//TODO: Test nesting and update repos
+
+	type N struct {
+		S1 string `schema:"s1" default:"test1"`
+		I2 int    `schema:"i2" default:"22"`
+	}
+
 	type D struct {
+		N
 		S string  `schema:"s" default:"test1"`
 		I int     `schema:"i" default:"21"`
 		B bool    `schema:"b" default:"false"`
@@ -2046,6 +2054,10 @@ func TestDefaultValuesAreSet(t *testing.T) {
 	}
 
 	expected := D{
+		N: N{
+			S1: "test1",
+			I2: 22,
+		},
 		S: "test1",
 		I: 21,
 		B: false,
@@ -2058,6 +2070,7 @@ func TestDefaultValuesAreSet(t *testing.T) {
 	}
 
 	type P struct {
+		*N
 		S *string  `schema:"s" default:"test1"`
 		I *int     `schema:"i" default:"21"`
 		B *bool    `schema:"b" default:"false"`
@@ -2065,7 +2078,7 @@ func TestDefaultValuesAreSet(t *testing.T) {
 		U *uint    `schema:"u" default:"1"`
 	}
 
-	p := P{}
+	p := P{N: &N{}}
 
 	if err := decoder.Decode(&p, data); err != nil {
 		t.Fatal("Error while decoding:", err)
@@ -2136,7 +2149,7 @@ func TestRequiredFieldsCannotHaveDefaults(t *testing.T) {
 
 	expected := "required fields cannot have a default value"
 
-	if err == nil || err.Error() != expected {
+	if err == nil || !strings.Contains(err.Error(), expected) {
 		t.Errorf("decoding should fail with error msg %s got %q", expected, err)
 	}
 
@@ -2159,7 +2172,7 @@ func TestDefaultsAreNotSupportedForStructsAndSlices(t *testing.T) {
 
 	expected := "default tag is supported only on: bool, float variants, string, unit variants types or their corresponding pointers"
 
-	if err == nil || err.Error() != expected {
+	if err == nil || !strings.Contains(err.Error(), expected) {
 		t.Errorf("decoding should fail with error msg %s got %q", expected, err)
 	}
 
